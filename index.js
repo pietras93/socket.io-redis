@@ -107,12 +107,16 @@ function adapter(uri, opts) {
     });
 
     sub.on('pmessageBuffer', this.onmessage.bind(this));
+    // Newer redis emits `pmessage` instead of `pmessageBuffer`
+    sub.on('pmessage', this.onmessage.bind(this));
 
     sub.subscribe([this.requestChannel, this.responseChannel], function(err){
       if (err) self.emit('error', err);
     });
 
     sub.on('messageBuffer', this.onrequest.bind(this));
+    // Newer redis emits `message` instead of `messageBuffer`
+    sub.on('message', this.onrequest.bind(this));
 
     function onError(err) {
       self.emit('error', err);
@@ -600,6 +604,16 @@ function adapter(uri, opts) {
 
     pub.publish(self.requestChannel, request);
   };
+
+  /**
+   * Make it consistent with socket.io Adapter type
+   * 
+   * @param {String} socket id
+   * @param {String} room name
+   * @param {Function} callback
+   * @api public
+   */
+  Redis.prototype.add = Redis.prototype.remoteJoin;
 
   /**
    * Makes the socket with the given id leave the room
